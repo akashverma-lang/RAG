@@ -78,9 +78,26 @@ try {
     Say "installing packages - this takes a few minutes the first time"
     & $venvPy -m pip install --upgrade pip --quiet
     & $venvPy -m pip install -r requirements.txt --quiet
+    $ocr = $true
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "  Package installation failed." -ForegroundColor Red
-        return
+        # Something in the list has no candidate for this Python. If it is only
+        # the OCR engine, the app is still fully usable, so drop it and carry on
+        # rather than leaving the user with nothing installed.
+        Say "a package would not install; retrying without the optional OCR engine"
+        $core = Join-Path $env:TEMP "rag-req-core.txt"
+        Get-Content requirements.txt |
+            Where-Object { $_ -notmatch 'optional-ocr' } |
+            Set-Content $core -Encoding ascii
+        & $venvPy -m pip install -r $core --quiet
+        Remove-Item $core -ErrorAction SilentlyContinue
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "  Package installation failed." -ForegroundColor Red
+            Write-Host "  Run this to see which package and why:"
+            Write-Host "    $venvPy -m pip install -r $Target
+equirements.txt"
+            return
+        }
+        $ocr = $false
     }
 
     # A shortcut, so it can be started again without retyping any of this.
@@ -106,6 +123,12 @@ try {
     Write-Host ""
     Write-Host "  Start it again later from the desktop shortcut,"
     Write-Host "  or by running run.bat in $Target"
+    if (-not $ocr) {
+        Write-Host ""
+        Write-Host "  Note: the OCR engine would not install on this Python, so" -ForegroundColor Yellow
+        Write-Host "  text that exists only inside a picture will not be read." -ForegroundColor Yellow
+        Write-Host "  Everything else works." -ForegroundColor Yellow
+    }
     Write-Host ""
 
     & $venvPy launcher.py

@@ -23,7 +23,17 @@ extract-msg>=0.48         # Outlook .msg
 # Reads text out of pictures: standalone images, scanned PDFs, and images
 # embedded in Word / PowerPoint / Excel / PDF files. Pure pip install - unlike
 # Tesseract it needs no separate system installer.
-rapidocr-onnxruntime>=1.3
+#
+# The floor is 1.2, not 1.3: every 1.3 and 1.4 release caps itself at Python
+# <3.13, so on 3.13 -- what python.org hands out today -- pip can see no
+# candidate at all and the whole install dies. 1.2.3 is a py3-none-any wheel,
+# installs anywhere, and is the version this project is developed against.
+# pip honours Requires-Python, so 3.12 and below still get 1.4.x from this line.
+#
+# The trailing marker on the line below is what the installers match on to drop
+# it and carry on when it will not install; everything except reading text out
+# of pictures works without it.
+rapidocr-onnxruntime>=1.2    # optional-ocr
 pillow>=10.0
 
 # ---------------------------------------------------------------- optional extras

@@ -94,6 +94,8 @@ much is indexed.
 |---|---|---|
 | `python` is not recognised | Python not on PATH | reinstall Python with *Add python.exe to PATH* ticked |
 | Installation fails on `onnxruntime` | 32-bit Python | install 64-bit Python 3.10+ |
+| `No matching distribution found for rapidocr-onnxruntime` | an old copy of this project, pinned above what your Python supports | re-run the installer; current versions drop OCR and carry on rather than failing |
+| It installed but says *no engine available* for OCR | the OCR engine would not install on this Python | everything except reading text out of pictures still works; `pip install rapidocr-onnxruntime` to retry |
 | Red dot, *no model configured* | no API key yet | add one on the setup screen (the gear icon) |
 | Red dot, *rate limit* | free tier quota | wait a minute, or switch provider in the dropdown |
 | *That documents folder does not exist* | typo, or a drive not mounted | browse to it rather than typing |

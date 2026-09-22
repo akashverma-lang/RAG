@@ -62,7 +62,21 @@ cd "$TARGET"
 [ -x ".venv/bin/python" ] || "$PY" -m venv .venv
 say "installing packages - this takes a few minutes the first time"
 .venv/bin/python -m pip install --upgrade pip --quiet
-.venv/bin/python -m pip install -r requirements.txt --quiet
+OCR=1
+if ! .venv/bin/python -m pip install -r requirements.txt --quiet; then
+    # Something in the list has no candidate for this Python. If it is only the
+    # OCR engine, the app is still fully usable, so drop it and keep going
+    # rather than leaving the user with nothing installed.
+    say "a package would not install; retrying without the optional OCR engine"
+    grep -v 'optional-ocr' requirements.txt > "$TMP/req-core.txt"
+    if ! .venv/bin/python -m pip install -r "$TMP/req-core.txt" --quiet; then
+        echo "  Package installation failed."
+        echo "  Run this to see which package and why:"
+        echo "    $TARGET/.venv/bin/python -m pip install -r $TARGET/requirements.txt"
+        exit 1
+    fi
+    OCR=0
+fi
 
 # A small launcher, so it can be started again without retyping any of this.
 cat > "$TARGET/start.sh" <<'LAUNCH'
@@ -83,6 +97,11 @@ echo "     Groq    console.groq.com/keys"
 echo "     Gemini  aistudio.google.com/apikey"
 echo
 echo "  Start it again later with:  $TARGET/start.sh"
+if [ "$OCR" = "0" ]; then
+    echo
+    echo "  Note: the OCR engine would not install on this Python, so text that"
+    echo "  exists only inside a picture will not be read. Everything else works."
+fi
 echo
 
 exec .venv/bin/python launcher.py

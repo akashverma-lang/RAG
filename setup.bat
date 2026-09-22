@@ -34,10 +34,23 @@ echo [2/3] Installing packages. The first run downloads a few hundred MB.
 ".venv\Scripts\python.exe" -m pip install --upgrade pip --quiet
 ".venv\Scripts\python.exe" -m pip install -r requirements.txt
 if errorlevel 1 (
+    REM Something in the list has no candidate for this Python. If it is only the
+    REM OCR engine the app is still fully usable, so drop it and carry on rather
+    REM than leaving the user with nothing installed.
     echo.
-    echo ERROR: installation failed. Check your internet connection and try again.
-    pause
-    exit /b 1
+    echo A package would not install. Retrying without the optional OCR engine...
+    findstr /V /C:"optional-ocr" requirements.txt > "%TEMP%\rag-req-core.txt"
+    ".venv\Scripts\python.exe" -m pip install -r "%TEMP%\rag-req-core.txt"
+    del "%TEMP%\rag-req-core.txt" >nul 2>&1
+    if errorlevel 1 (
+        echo.
+        echo ERROR: installation failed. Check your internet connection and try again.
+        pause
+        exit /b 1
+    )
+    echo.
+    echo Note: OCR is unavailable, so text that exists only inside a picture
+    echo       will not be read. Everything else works.
 )
 
 echo.
