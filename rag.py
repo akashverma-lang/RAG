@@ -215,7 +215,7 @@ def cmd_test(args: argparse.Namespace) -> int:
         for script in ("check_frontend.js", "check_frontend_boot.js",
                        "check_frontend_send.js", "check_frontend_canvas.js",
                        "check_frontend_diagram.js", "check_frontend_xss.js",
-                       "check_frontend_dashboard.js"):
+                       "check_frontend_dashboard.js", "check_frontend_select.js"):
             failed = subprocess.call(
                 ["node", str(ROOT / "tests" / script)], cwd=str(ROOT)) or failed
     else:
