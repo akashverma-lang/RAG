@@ -18,7 +18,17 @@ a page on the web cannot read a folder on the visitor's computer, so a hosted co
 could only work by having them upload their documents to someone else's server
 first. Installing locally is what keeps the folder where it already is.
 
-## Deploying it
+## Where it is published
+
+Pushing to `main` publishes this folder to GitHub Pages through
+`.github/workflows/pages.yml`, which gives the link
+
+    https://akashverma-lang.github.io/RAG/
+
+That needs one switch flipped once, by the repository owner: **Settings -> Pages ->
+Source: GitHub Actions**. Until then the workflow runs and fails at the last step.
+
+## Deploying it to Hugging Face instead
 
 The front matter above is what Hugging Face reads: `sdk: static` serves `index.html`
 as-is, with no build step and nothing to run, so the Space never sleeps in a way a
