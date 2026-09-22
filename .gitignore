@@ -1,0 +1,39 @@
+# Settings, including API keys. Never commit this.
+.env
+.env.local
+settings.env
+
+# The index and the downloaded models: large, machine-specific, rebuildable.
+storage/
+*.f32
+*.rowids
+
+# Packaging output
+dist/
+build/
+*.spec
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs and scratch
+*.log
+scratch/
+tmp/
+
+# Agent/editor tooling, not part of the app
+.claude/
+.agents/
+skills-lock.json

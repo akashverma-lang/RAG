@@ -1,0 +1,33 @@
+# ---------------------------------------------------------------- web server
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.7
+python-dotenv>=1.0
+httpx>=0.27
+
+# ---------------------------------------------------------------- retrieval core
+numpy>=1.26
+fastembed>=0.4.2          # ONNX embeddings + reranker, no torch required
+
+# ---------------------------------------------------------------- document parsers
+pymupdf>=1.24             # PDF
+python-docx>=1.1          # Word .docx
+python-pptx>=1.0          # PowerPoint .pptx
+openpyxl>=3.1             # Excel .xlsx / .xlsm
+beautifulsoup4>=4.12      # HTML
+lxml>=5.2
+xlrd>=2.0                 # legacy .xls
+extract-msg>=0.48         # Outlook .msg
+
+# ---------------------------------------------------------------- OCR
+# Reads text out of pictures: standalone images, scanned PDFs, and images
+# embedded in Word / PowerPoint / Excel / PDF files. Pure pip install - unlike
+# Tesseract it needs no separate system installer.
+rapidocr-onnxruntime>=1.3
+pillow>=10.0
+
+# ---------------------------------------------------------------- optional extras
+# pytesseract>=0.3.10     # alternative OCR engine (needs the Tesseract binary)
+# pywin32>=306            # legacy .doc/.xls/.ppt via an installed MS Office
+# sentence-transformers   # alternative embedding backend (pulls torch, ~2 GB)
+PyYAML>=6.0

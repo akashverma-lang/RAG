@@ -1,0 +1,19 @@
+# Line endings are not a preference here, they are a correctness matter: install.sh
+# is fetched raw and piped straight to bash, and a CR at the end of each line makes
+# every command in it fail. Pin them rather than depend on each contributor's
+# core.autocrlf setting.
+* text=auto eol=lf
+
+# Windows batch and PowerShell want CRLF; cmd.exe mis-parses LF-only .bat files.
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Never touched.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.onnx binary

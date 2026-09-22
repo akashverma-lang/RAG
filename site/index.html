@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local RAG — ask your own documents</title>
+<meta name="description" content="Search and question your own files. Indexed on your machine, answered by a free model. One command to install.">
+<style>
+:root{
+  --bg:#08090b; --bg-2:#101114; --bg-3:#17191d; --line:#26292f;
+  --fg:#f0ede9; --fg-2:#a8a099; --fg-3:#9c948c;
+  --accent:#ff7a1a; --accent-2:#ff9448; --accent-soft:rgba(255,122,26,.13);
+  --on-accent:#0a0805; --ok:#3ddc97; --warn:#ffd12e;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --sans:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;
+  --r-sm:8px; --r-md:12px; --r-pill:999px;
+}
+html[data-theme="light"]{
+  --bg:#faf8f5; --bg-2:#ffffff; --bg-3:#f1ede7; --line:#e3ddd4;
+  --fg:#1a1713; --fg-2:#5e564c; --fg-3:#575049;
+  --accent:#a8430c; --accent-2:#8f3a07; --accent-soft:rgba(168,67,12,.09);
+  --on-accent:#fffdfa;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 var(--sans);
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+a{color:var(--accent)}
+
+/* The cloud is the product's own signature, so the page opens with it. */
+header{position:relative;padding:76px 0 54px;overflow:hidden}
+#cloud{position:absolute;inset:0;width:100%;height:100%;opacity:.5;pointer-events:none}
+header .wrap{position:relative;z-index:1}
+.eyebrow{font:500 10.5px/1 var(--mono);letter-spacing:.15em;text-transform:uppercase;
+  color:var(--accent)}
+h1{margin:14px 0 0;font:700 clamp(34px,6vw,58px)/1.02 var(--sans);letter-spacing:-.035em;
+  text-wrap:balance}
+.lede{margin:18px 0 0;font-size:17px;line-height:1.6;color:var(--fg-2);max-width:54ch}
+
+.cmd{margin:30px 0 10px;display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
+.cmd code{flex:1;min-width:280px;background:var(--bg-2);border:1px solid var(--line);
+  border-radius:var(--r-md);padding:14px 16px;font:13px/1.5 var(--mono);color:var(--fg);
+  overflow-x:auto;white-space:nowrap}
+.copy{background:var(--accent);color:var(--on-accent);border:none;
+  border-radius:var(--r-md);padding:0 20px;font:600 13.5px var(--sans);cursor:pointer;
+  white-space:nowrap}
+.copy:hover{background:var(--accent-2)}
+.tabs{display:flex;gap:6px;margin:30px 0 12px}
+.tab{background:none;border:1px solid var(--line);color:var(--fg-2);cursor:pointer;
+  border-radius:var(--r-pill);padding:5px 14px;font:500 12px var(--sans)}
+.tab[aria-selected="true"]{border-color:var(--accent);color:var(--accent);
+  background:var(--accent-soft)}
+.note{font-size:12.5px;color:var(--fg-3);margin-top:4px}
+
+section{padding:48px 0;border-top:1px solid var(--line)}
+h2{margin:0 0 6px;font:700 clamp(21px,3vw,28px)/1.15 var(--sans);letter-spacing:-.025em}
+.sub{margin:0 0 26px;color:var(--fg-2);font-size:14px;max-width:56ch}
+
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.card{border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg-2);
+  padding:18px 19px}
+.card h3{margin:0 0 7px;font-size:14.5px;font-weight:640}
+.card p{margin:0;font-size:13px;line-height:1.6;color:var(--fg-2)}
+
+ol.steps{counter-reset:s;list-style:none;padding:0;margin:0;display:grid;gap:15px}
+ol.steps li{counter-increment:s;position:relative;padding-left:40px;font-size:14px;
+  line-height:1.6}
+ol.steps li::before{content:counter(s);position:absolute;left:0;top:-1px;width:26px;
+  height:26px;border-radius:50%;border:1px solid var(--accent);color:var(--accent);
+  font:600 12px/24px var(--mono);text-align:center}
+ol.steps b{color:var(--fg)}
+kbd{font:12px var(--mono);background:var(--bg-3);border:1px solid var(--line);
+  border-radius:5px;padding:2px 6px}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);
+  vertical-align:top}
+th{font:500 10.5px/1 var(--mono);letter-spacing:.11em;text-transform:uppercase;
+  color:var(--fg-3)}
+td b{color:var(--fg)}
+
+.plain{border-left:2px solid var(--warn);padding:2px 0 2px 14px;color:var(--fg-2);
+  font-size:13.5px;line-height:1.65}
+footer{padding:36px 0 60px;color:var(--fg-3);font-size:12.5px;
+  border-top:1px solid var(--line)}
+footer a{color:var(--fg-2)}
+@media (prefers-reduced-motion:reduce){ #cloud{display:none} }
+</style>
+</head>
+<body>
+
+<header>
+  <canvas id="cloud" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <span class="eyebrow">Local RAG</span>
+    <h1>Ask your own documents.</h1>
+    <p class="lede">Point it at a folder. It reads every PDF, Word file, spreadsheet,
+      slide deck and scan inside — then answers questions about them with citations
+      you can click back to the page they came from.</p>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-os="win">Windows</button>
+      <button class="tab" role="tab" aria-selected="false" data-os="nix">macOS / Linux</button>
+    </div>
+    <div class="cmd">
+      <code id="cmd">irm https://raw.githubusercontent.com/akashverma-lang/RAG/main/install.ps1 | iex</code>
+      <button class="copy" id="copy">Copy</button>
+    </div>
+    <p class="note">Paste into PowerShell. Installs to your home folder, takes a few
+      minutes, then opens by itself. Delete the folder to uninstall.</p>
+  </div>
+</header>
+
+<section><div class="wrap">
+  <h2>What happens on your machine</h2>
+  <p class="sub">Reading, indexing and searching are local. Only the question you type
+    and the passages it selected are sent to the model that writes the answer.</p>
+  <div class="grid">
+    <div class="card"><h3>Your files stay put</h3>
+      <p>Nothing is uploaded, copied or synced. The index sits beside your own
+        settings and points back at the originals.</p></div>
+    <div class="card"><h3>Reads what it finds</h3>
+      <p>PDF, Word, Excel, PowerPoint, CSV, email, HTML and plain text. Scans and
+        photographs go through OCR, so text inside an image is searchable too.</p></div>
+    <div class="card"><h3>Spreadsheets become queryable</h3>
+      <p>Tables are loaded into SQL, so "how many claims in 2025" is counted across
+        every row rather than guessed from a sample.</p></div>
+    <div class="card"><h3>Answers carry their source</h3>
+      <p>Every sentence taken from a document is numbered, and the citation opens the
+        file at the right page.</p></div>
+    <div class="card"><h3>Finds the gaps</h3>
+      <p>Pick a few spreadsheets and it measures where one part of the business is
+        behind another that is already doing better — with the arithmetic shown.</p></div>
+    <div class="card"><h3>Draws when it helps</h3>
+      <p>A process or a decision comes back as a flowchart, rendered by the page
+        itself with no library and no network call.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Getting started</h2>
+  <p class="sub">Four things, once.</p>
+  <ol class="steps">
+    <li>Run the command above. It installs a private Python environment in its own
+      folder and starts the app.</li>
+    <li>A setup screen asks for the <b>folder holding your documents</b> — browse to
+      it, or paste the path.</li>
+    <li>Paste a free API key. <b>Groq</b> at
+      <a href="https://console.groq.com/keys">console.groq.com/keys</a> or
+      <b>Gemini</b> at <a href="https://aistudio.google.com/apikey">aistudio.google.com/apikey</a>.
+      Either one is enough.</li>
+    <li>Press <kbd>Index files</kbd> under Manage, wait for it to read the folder,
+      then ask it something.</li>
+  </ol>
+</div></section>
+
+<section><div class="wrap">
+  <h2>What it needs</h2>
+  <table>
+    <tr><th>Python</th><td>3.10 or newer. The installer says so if it is missing.</td></tr>
+    <tr><th>Memory</th><td><b>~400 MB</b> while running. Measured at 307 MB with both
+      local models loaded.</td></tr>
+    <tr><th>Disk</th><td>About <b>700 MB</b> for the environment and the two local
+      models, plus the index — roughly a tenth of what it reads.</td></tr>
+    <tr><th>Network</th><td>Needed on the first run to download the packages and the
+      embedding model, and thereafter only for the provider that writes answers.</td></tr>
+    <tr><th>API key</th><td>A free Groq or Gemini key. Both have free tiers with rate
+      limits rather than charges.</td></tr>
+  </table>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Why it installs rather than opening in a tab</h2>
+  <p class="plain">A page on the web cannot read a folder on your computer — browsers
+    forbid it, and that rule is the reason your files are safe from every other site
+    you have open. A hosted version could only work by having you upload your
+    documents to someone else's server first. This installs instead, so the folder
+    you point at is read where it already lives and never leaves the machine.</p>
+</div></section>
+
+<footer><div class="wrap">
+  <a href="https://github.com/akashverma-lang/RAG">Source on GitHub</a> ·
+  <a href="https://github.com/akashverma-lang/RAG/blob/main/README.md">Documentation</a> ·
+  <a href="https://github.com/akashverma-lang/RAG/issues">Report a problem</a>
+  <br><br>
+  Runs on your machine. Your documents are never uploaded.
+</div></footer>
+
+<script>
+const CMDS = {
+  win: "irm https://raw.githubusercontent.com/akashverma-lang/RAG/main/install.ps1 | iex",
+  nix: "curl -fsSL https://raw.githubusercontent.com/akashverma-lang/RAG/main/install.sh | bash",
+};
+const tabs = [...document.querySelectorAll(".tab")];
+tabs.forEach(t => t.onclick = () => {
+  tabs.forEach(x => x.setAttribute("aria-selected", String(x === t)));
+  document.getElementById("cmd").textContent = CMDS[t.dataset.os];
+});
+// Default to whichever platform the visitor is on, so the first thing they see is
+// the command they can actually run.
+if (!/Win/i.test(navigator.platform || navigator.userAgent)) tabs[1].click();
+
+document.getElementById("copy").onclick = async (e) => {
+  const btn = e.currentTarget;
+  try {
+    await navigator.clipboard.writeText(document.getElementById("cmd").textContent);
+    btn.textContent = "Copied";
+  } catch { btn.textContent = "Select it manually"; }
+  setTimeout(() => (btn.textContent = "Copy"), 1800);
+};
+
+/* The same point cloud the app opens with, at a fraction of the size: it is the one
+   thing that makes this page recognisably the same product as the screenshot. */
+(function(){
+  const cv = document.getElementById("cloud");
+  if (!cv || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const ctx = cv.getContext("2d");
+  const N = 900, pts = [];
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  for (let i = 0; i < N; i++){
+    const u = rnd(0, 6.283), v = Math.acos(rnd(-1, 1));
+    let x = .6 * Math.sin(v) * Math.cos(u), y = .62 * Math.cos(v), z = .58 * Math.sin(v) * Math.sin(u);
+    if (y < -.3) { i--; continue; }
+    if (y < 0){ x *= 1 + y * .34; z *= 1 + y * .3; }
+    pts.push({ x, y: y + .12, z, seed: Math.random() });
+  }
+  let W = 0, H = 0, spin = 0;
+  function size(){
+    const dpr = Math.min(devicePixelRatio || 1, 1.5);
+    W = cv.clientWidth; H = cv.clientHeight;
+    if (!W || !H) return;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  const style = getComputedStyle(document.documentElement);
+  const rgb = n => {
+    const h = style.getPropertyValue(n).trim().replace("#", "");
+    const v = parseInt(h.length === 3 ? h.split("").map(c => c + c).join("") : h, 16);
+    return `${(v >> 16) & 255},${(v >> 8) & 255},${v & 255}`;
+  };
+  const ramp = [rgb("--fg-2"), rgb("--accent"), rgb("--warn")];
+  function draw(){
+    if (!W || !H){ size(); requestAnimationFrame(draw); return; }
+    ctx.clearRect(0, 0, W, H);
+    spin += .0016;
+    const R = Math.min(W, H) * .58, cx = W * .74, cy = H * .5;
+    const cs = Math.cos(spin), sn = Math.sin(spin);
+    const out = [];
+    for (const p of pts){
+      const X = p.x * cs - p.z * sn, Z0 = p.x * sn + p.z * cs;
+      const Y = p.y * .99 - Z0 * .14, Z = p.y * .14 + Z0 * .99;
+      const d = 1 / (1.9 + Z);
+      out.push({ x: cx + X * R * d * 1.9, y: cy - Y * R * d * 1.9, d, seed: p.seed });
+    }
+    out.sort((a, b) => a.d - b.d);
+    for (const q of out){
+      const a = Math.min(.9, (q.d - .32) * 2.9);
+      if (a <= .02) continue;
+      ctx.beginPath();
+      ctx.arc(q.x, q.y, Math.max(.7, q.d * 3.2), 0, 6.283);
+      ctx.fillStyle = `rgba(${q.seed < .17 ? ramp[1] : q.seed < .3 ? ramp[2] : ramp[0]},${a * .7})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  addEventListener("resize", size);
+  requestAnimationFrame(() => { size(); draw(); });
+})();
+</script>
+</body>
+</html>
